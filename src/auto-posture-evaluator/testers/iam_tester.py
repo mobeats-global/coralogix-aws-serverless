@@ -36,6 +36,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         self.detect_old_access_key()
+        self.detect_attacched_users()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -70,4 +71,32 @@ class Tester(interfaces.TesterInterface):
         d2 = date.today()
         return abs((d2 - d1).days)
 
-    
+    def detect_attacched_users(self) -> str:
+        result = []
+        for policy in self.policies['Policies']:
+            response = self.aws_iam_resource.Policy(policy['Arn'])
+            size = sum(1 for _ in response.attached_users.all())
+            if(size == 0):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
+                    "item_type": "policy_record",
+                    "policy_record": policy,
+                    "test_name": 'policy_attached_users',
+                    "timestamp": time.time()
+                })
+            
+            if len(result) == 0:
+               result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": 'policy_attached_users',
+                    "item": None,
+                    "item_type": "policy_record",
+                    "timestamp": time.time()
+                }) 
+
+        return result
