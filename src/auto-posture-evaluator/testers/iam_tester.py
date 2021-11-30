@@ -18,6 +18,8 @@ class Tester(interfaces.TesterInterface):
 
         self.users = self.aws_iam_client.list_users()
 
+        self.policies = self.aws_iam_client.list_policies()
+
         self.access_key = self.aws_iam_resource.AccessKey('user_name','id')
 
         self.cache = {}
@@ -38,7 +40,6 @@ class Tester(interfaces.TesterInterface):
     def detect_old_access_key(self) -> str:
         result = []
         for user in self.users['Users']:
-            print(user)
             days = self.days_between(user['CreateDate'])
             if(days > 90):
                 result.append({
@@ -68,3 +69,5 @@ class Tester(interfaces.TesterInterface):
         d1 = date(d1.year, d1.month, d1.day)
         d2 = date.today()
         return abs((d2 - d1).days)
+
+    
