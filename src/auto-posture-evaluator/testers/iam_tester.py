@@ -5,6 +5,7 @@ import botocore.exceptions
 import interfaces
 import requests
 import urllib.parse
+from datetime import date
 
 
 class Tester(interfaces.TesterInterface):
@@ -32,9 +33,38 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        self.test_1()
+        self.detect_old_access_key()
 
-    def test_1(self) -> str:
-        for x in self.users:
-            print(x['Users'])
-        return 'testing'
+    def detect_old_access_key(self) -> str:
+        result = []
+        for user in self.users['Users']:
+            print(user)
+            days = self.days_between(user['CreateDate'])
+            if(days > 90):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": user['UserId'] + "@@" + user['UserName'],
+                    "item_type": "user_record",
+                    "user_record": user,
+                    "test_name": 'old_access_keys',
+                    "timestamp": time.time()
+                })
+        
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'old_access_keys',
+                "item": None,
+                "item_type": "user_record",
+                "timestamp": time.time()
+            })
+        return result
+
+    def days_between(self, d1):
+        d1 = date(d1.year, d1.month, d1.day)
+        d2 = date.today()
+        return abs((d2 - d1).days)
