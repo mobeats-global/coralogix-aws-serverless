@@ -102,7 +102,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_symbol(self):
         result = []
-        if self.password_policy['PasswordPolicy']['RequireSymbols']:
+        if not self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -128,7 +128,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_number(self):
         result = []
-        if self.password_policy['PasswordPolicy']['RequireNumbers']:
+        if not self.password_policy['PasswordPolicy']['RequireNumbers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -181,7 +181,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_uppercase(self):
         result = []
-        if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+        if not self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
