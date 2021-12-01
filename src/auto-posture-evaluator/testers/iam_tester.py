@@ -33,6 +33,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_attacched_users()
         self.detect_policy_requires_symbol()
         self.detect_policy_requires_number()
+        self.detect_password_policy_length()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -148,3 +149,29 @@ class Tester(interfaces.TesterInterface):
             })
         
         return result
+
+    def detect_password_policy_length(self):
+        result = []
+        if self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'minimum_password_policy_length',
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'minimum_password_policy_length',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+            
+        return result    
