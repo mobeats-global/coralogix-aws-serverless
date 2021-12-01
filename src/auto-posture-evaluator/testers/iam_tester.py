@@ -33,6 +33,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_attacched_users()
         self.detect_policy_require_symbols()
         self.detect_password_policy_length()
+        self.detect_policy_prevents_password_reuse()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -148,3 +149,29 @@ class Tester(interfaces.TesterInterface):
             })
             
         return result    
+
+    def detect_policy_prevents_password_reuse(self):
+        result = []
+        account_password_policy = self.aws_iam_resource.AccountPasswordPolicy()
+        if (account_password_policy.password_reuse_prevention is None or account_password_policy.password_reuse_prevention == 0):
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'prevents_password_reuse',
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'prevents_password_reuse',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })    
+        return result
