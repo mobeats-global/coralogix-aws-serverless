@@ -30,16 +30,19 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        self.detect_old_access_key()
-        self.detect_attached_users()
-        self.detect_policy_requires_symbol()
-        self.detect_policy_requires_number()
-        self.detect_password_policy_length()
-        self.detect_policy_requires_uppercase()
-        self.detect_policy_prevents_password_reuse()
-        self.detect_policy_requires_lowercase()
+        return \
+            self.detect_old_access_key() + \
+            self.detect_attached_users() + \
+            self.detect_policy_requires_symbol() + \
+            self.detect_policy_requires_number() + \
+            self.detect_password_policy_length() + \
+            self.detect_policy_requires_uppercase() + \
+            self.detect_policy_prevents_password_reuse() + \
+            self.detect_policy_requires_lowercase()
+        
 
     def detect_old_access_key(self):
+        test_name = "old_access_keys"
         result = []
         for user in self.users['Users']:
             days = self.days_between(user['CreateDate'])
@@ -51,7 +54,7 @@ class Tester(interfaces.TesterInterface):
                     "item": user['UserId'] + "@@" + user['UserName'],
                     "item_type": "user_record",
                     "user_record": user,
-                    "test_name": 'old_access_keys',
+                    "test_name": test_name,
                     "timestamp": time.time()
                 })
         
@@ -60,7 +63,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'old_access_keys',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "user_record",
                 "timestamp": time.time()
@@ -73,6 +76,7 @@ class Tester(interfaces.TesterInterface):
         return abs((d2 - d1).days)
 
     def detect_attached_users(self):
+        test_name = "policy_attached_users"
         result = []
         for policy in self.policies['Policies']:
             response = self.aws_iam_resource.Policy(policy['Arn'])
@@ -85,7 +89,7 @@ class Tester(interfaces.TesterInterface):
                     "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                     "item_type": "policy_record",
                     "policy_record": policy,
-                    "test_name": 'policy_attached_users',
+                    "test_name": test_name,
                     "timestamp": time.time()
                 })
             
@@ -94,7 +98,7 @@ class Tester(interfaces.TesterInterface):
                     "user": self.user_id,
                     "account_arn": self.account_arn,
                     "account": self.account_id,
-                    "test_name": 'policy_attached_users',
+                    "test_name": test_name,
                     "item": None,
                     "item_type": "policy_record",
                     "timestamp": time.time()
@@ -103,13 +107,14 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_policy_requires_symbol(self):
+        test_name = "policy_requires_symbol"
         result = []
         if self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_symbol',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -122,20 +127,21 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'policy_requires_symbol',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
         
         return result
 
     def detect_policy_requires_number(self):
+        test_name = "policy_requires_number"
         result = []
         if self.password_policy['PasswordPolicy']['RequireNumbers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_number',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -148,13 +154,14 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'policy_requires_number',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
         
         return result
 
     def detect_password_policy_length(self):
+        test_name = "minimum_password_policy_length"
         result = []
         if self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
             result.append({
@@ -164,7 +171,7 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'minimum_password_policy_length',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
         else:
@@ -172,7 +179,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'minimum_password_policy_length',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -181,13 +188,14 @@ class Tester(interfaces.TesterInterface):
         return result    
 
     def detect_policy_requires_uppercase(self):
+        test_name = "policy_requires_uppercase"
         result = []
         if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_uppercase',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -200,13 +208,14 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'policy_requires_uppercase',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
 
         return result
 
     def detect_policy_prevents_password_reuse(self):
+        test_name = "prevents_password_reuse"
         result = []
         account_password_policy = self.aws_iam_resource.AccountPasswordPolicy()
         if (account_password_policy.password_reuse_prevention is None or account_password_policy.password_reuse_prevention == 0):
@@ -217,7 +226,7 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'prevents_password_reuse',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
         else:
@@ -225,7 +234,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'prevents_password_reuse',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -234,13 +243,14 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_policy_requires_lowercase(self):
+        test_name = "policy_requires_lowercase"
         result = []
         if self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_lowercase',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -253,7 +263,7 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'policy_requires_lowercase',
+                "test_name": test_name,
                 "timestamp": time.time()
             })
 
