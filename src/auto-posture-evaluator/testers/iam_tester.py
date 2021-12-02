@@ -42,7 +42,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_policy_requires_lowercase()
         self.detect_policy_max_password_age()
 
-    def detect_old_access_key(self) -> str:
+    def detect_old_access_key(self):
         result = []
         for user in self.users['Users']:
             days = self.days_between(user['CreateDate'])
@@ -75,7 +75,7 @@ class Tester(interfaces.TesterInterface):
         d2 = date.today()
         return abs((d2 - d1).days)
 
-    def detect_attached_users(self) -> str:
+    def detect_attached_users(self):
         result = []
         for policy in self.policies['Policies']:
             response = self.aws_iam_resource.Policy(policy['Arn'])
