@@ -101,7 +101,17 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_symbol(self):
         result = []
-        if not self.password_policy['PasswordPolicy']['RequireSymbols']:
+        if self.password_policy['PasswordPolicy']['RequireSymbols']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_symbol',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -110,16 +120,6 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": 'policy_requires_symbol',
-                "timestamp": time.time()
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": 'policy_requires_symbol',
-                "item": None,
-                "item_type": "password_policy_record",
                 "timestamp": time.time()
             })
         
@@ -127,7 +127,17 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_number(self):
         result = []
-        if not self.password_policy['PasswordPolicy']['RequireNumbers']:
+        if self.password_policy['PasswordPolicy']['RequireNumbers']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_number',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -136,16 +146,6 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": 'policy_requires_number',
-                "timestamp": time.time()
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": 'policy_requires_number',
-                "item": None,
-                "item_type": "password_policy_record",
                 "timestamp": time.time()
             })
         
@@ -179,7 +179,17 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_uppercase(self):
         result = []
-        if not self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+        if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_uppercase',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -188,16 +198,6 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": 'policy_requires_uppercase',
-                "timestamp": time.time()
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": 'policy_requires_uppercase',
-                "item": None,
-                "item_type": "password_policy_record",
                 "timestamp": time.time()
             })
 
