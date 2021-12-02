@@ -30,7 +30,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         self.detect_old_access_key()
-        self.detect_attacched_users()
+        self.detect_attached_users()
         self.detect_policy_requires_symbol()
         self.detect_policy_requires_number()
         self.detect_password_policy_length()
@@ -71,7 +71,7 @@ class Tester(interfaces.TesterInterface):
         d2 = date.today()
         return abs((d2 - d1).days)
 
-    def detect_attacched_users(self) -> str:
+    def detect_attached_users(self) -> str:
         result = []
         for policy in self.policies['Policies']:
             response = self.aws_iam_resource.Policy(policy['Arn'])
