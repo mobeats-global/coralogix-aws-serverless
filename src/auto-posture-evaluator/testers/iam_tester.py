@@ -21,6 +21,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
+        self.days_to_expire = 90
 
     def declare_tested_service(self) -> str:
         return 'iam'
@@ -42,7 +43,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for user in self.users['Users']:
             days = self.days_between(user['CreateDate'])
-            if(days > 90):
+            if(days > self.days_to_expire):
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
