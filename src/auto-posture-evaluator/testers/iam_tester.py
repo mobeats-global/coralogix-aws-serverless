@@ -34,6 +34,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_policy_requires_symbol()
         self.detect_policy_requires_number()
         self.detect_password_policy_length()
+        self.detect_policy_requires_uppercase()
         self.detect_policy_prevents_password_reuse()
 
     def detect_old_access_key(self) -> str:
@@ -106,10 +107,9 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": 'policy_requires_symbol',
+                "item": None,
+                "item_type": "password_policy_record",
                 "timestamp": time.time()
             })
         else:
@@ -117,9 +117,10 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_symbol',
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_symbol',
                 "timestamp": time.time()
             })
         
@@ -132,10 +133,9 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": 'policy_requires_number',
+                "item": None,
+                "item_type": "password_policy_record",
                 "timestamp": time.time()
             })
         else:
@@ -143,9 +143,10 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_requires_number',
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_number',
                 "timestamp": time.time()
             })
         
@@ -177,6 +178,32 @@ class Tester(interfaces.TesterInterface):
             
         return result    
 
+    def detect_policy_requires_uppercase(self):
+        result = []
+        if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_uppercase',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_uppercase',
+                "timestamp": time.time()
+            })
+
+        return result
+
     def detect_policy_prevents_password_reuse(self):
         result = []
         account_password_policy = self.aws_iam_resource.AccountPasswordPolicy()
@@ -200,5 +227,7 @@ class Tester(interfaces.TesterInterface):
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
-            })    
+            })
+            
         return result
+            
