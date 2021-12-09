@@ -18,7 +18,16 @@ class Tester(interfaces.TesterInterface):
         try:
             self.password_policy = self.aws_iam_client.get_account_password_policy()
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
-            self.password_policy = None
+            self.password_policy = {'PasswordPolicy' : {
+                    'AllowUsersToChangePassword': False,
+                    'ExpirePasswords': False,
+                    'MinimumPasswordLength': 8, ## default
+                    'RequireSymbols': True, ## default
+                    'RequireNumbers': True,
+                    'RequireUppercaseCharacters': True,
+                    'RequireLowercaseCharacters': True
+                }
+            }
         self.access_key = self.aws_iam_resource.AccessKey('user_name','id')
         self.cache = {}
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
@@ -112,7 +121,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_symbol(self):
         test_name = "policy_requires_symbol"
         result = []
-        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireSymbols']:
+        if self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -139,7 +148,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_number(self):
         test_name = "policy_requires_number"
         result = []
-        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireNumbers']:
+        if self.password_policy['PasswordPolicy']['RequireNumbers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -166,7 +175,7 @@ class Tester(interfaces.TesterInterface):
     def detect_password_policy_length(self):
         test_name = "minimum_password_policy_length"
         result = []
-        if self.password_policy is None or self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
+        if self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -193,7 +202,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_uppercase(self):
         test_name = "policy_requires_uppercase"
         result = []
-        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+        if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -255,7 +264,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_lowercase(self):
         test_name = "policy_requires_lowercase"
         result = []
-        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
+        if self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
