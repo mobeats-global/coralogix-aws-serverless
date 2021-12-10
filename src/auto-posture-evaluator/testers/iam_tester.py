@@ -58,7 +58,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_policy_requires_lowercase() + \
             self.detect_policy_max_password_age() + \
             self.detect_root_access_key_is_present() + \
-            self.detect_initial_set_up_keys()
+            self.detect_initial_set_up_keys() + \
+            self.detect_mfa_is_enabled_for_root()
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -383,3 +384,29 @@ class Tester(interfaces.TesterInterface):
         d1 = date(firstDate.year, firstDate.month, firstDate.day)
         d2 = date(secondDate.year, secondDate.month, secondDate.day)
         return d1 == d2
+
+    def detect_mfa_is_enabled_for_root(self):
+        result = []
+        if self.account_summary['SummaryMap']['AccountMFAEnabled']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'detect_mfa_is_enabled',
+                "item": None,
+                "item_type": "account_summary_record",
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "account_summary@@" + self.account_id,
+                "item_type": "account_summary_record",
+                "account_summary_record": self.account_summary['SummaryMap'],
+                "test_name": 'detect_mfa_is_enabled',
+                "timestamp": time.time()
+            })
+
+        return result
