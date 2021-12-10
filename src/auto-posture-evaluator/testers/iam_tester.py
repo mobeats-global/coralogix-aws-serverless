@@ -16,6 +16,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_iam_resource = boto3.resource('iam')
         self.users = self.aws_iam_client.list_users()
         self.policies = self.aws_iam_client.list_policies()
+        self.account_summary = self.aws_iam_client.get_account_summary()
         try:
             self.password_policy = self.aws_iam_client.get_account_password_policy()
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
