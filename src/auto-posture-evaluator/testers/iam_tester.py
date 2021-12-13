@@ -53,7 +53,6 @@ class Tester(interfaces.TesterInterface):
             self.detect_policy_requires_number() + \
             self.detect_password_policy_length() + \
             self.detect_policy_requires_uppercase() + \
-            self.detect_policy_prevents_password_reuse() + \
             self.detect_policy_requires_lowercase() + \
             self.detect_policy_max_password_age() + \
             self.detect_root_access_key_is_present() + \
