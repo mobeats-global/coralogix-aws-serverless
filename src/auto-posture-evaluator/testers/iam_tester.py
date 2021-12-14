@@ -59,7 +59,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_root_access_key_is_present() + \
             self.detect_initial_set_up_keys() + \
             self.detect_user_inline_policy_in_group() + \
-            self.detect_mfa_is_enabled_for_root()
+            self.detect_mfa_is_enabled_for_root() + \
+            self.detect_full_policy_administrative_privileges()
 
     def date_converter(self, o):
         if isinstance(o, datetime.datetime):
@@ -445,6 +446,40 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
                 "test_name": test_name,
+                "timestamp": self.date_converter(datetime.datetime.now())
+            })
+
+        return result
+
+    def detect_full_policy_administrative_privileges(self):
+        test_name = "full_policy_administrative_privileges"
+        result = []
+        local_policy = self.aws_iam_client.list_policies(Scope='Local')
+        for policy in local_policy['Policies']:
+            policy_version = self.aws_iam_client.list_policy_versions(PolicyArn=policy['Arn'])
+            for version in policy_version['Versions']:
+                version_permission = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
+                for permission in version_permission['PolicyVersion']['Document']['Statement']:
+                    if permission['Effect'] == "Allow" and permission['Action'] == "*" and permission['Resource'] == "*":
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
+                            "item_type": "policy_record",
+                            "policy_record": policy,
+                            "test_name": test_name,
+                            "timestamp": self.date_converter(datetime.datetime.now())
+                        })
+
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "policy_record",
                 "timestamp": self.date_converter(datetime.datetime.now())
             })
 
