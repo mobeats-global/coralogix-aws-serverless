@@ -57,6 +57,7 @@ class Tester(interfaces.TesterInterface):
             self.detect_policy_max_password_age() + \
             self.detect_root_access_key_is_present() + \
             self.detect_initial_set_up_keys() + \
+            self.detect_user_inline_policy_in_group() + \
             self.detect_mfa_is_enabled_for_root() + \
             self.detect_full_policy_administrative_privileges()
     
@@ -327,7 +328,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_root_access_key_is_present(self):
-        test_name = "access_key_is_present"
+        test_name = "root_access_key_is_present"
         result = []
         if self.account_summary['SummaryMap']['AccountAccessKeysPresent']:
             result.append(self.json_serialize({
@@ -389,6 +390,38 @@ class Tester(interfaces.TesterInterface):
         d2 = date(secondDate.year, secondDate.month, secondDate.day)
         return d1 == d2
 
+    def detect_user_inline_policy_in_group(self):
+        test_name = "user_inline_policy_in_group"
+        result = []
+        for user in self.users['Users']:
+            user_group = self.aws_iam_client.list_groups_for_user(UserName=user['UserName'])
+            for group in user_group['Groups']:
+                group_policy = self.aws_iam_client.list_attached_group_policies(GroupName=group['GroupName'])
+                if len(group_policy['AttachedPolicies']) > 0:
+                    result.append(self.json_serialize({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": user['UserId'] + "@@" + user['UserName'],
+                        "item_type": "user_record",
+                        "user_record": user,
+                        "test_name": test_name,
+                        "timestamp": time.time()
+                    }))
+        
+        if len(result) == 0:
+            result.append(self.json_serialize({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "user_record",
+                "timestamp": time.time()
+            }))
+
+        return result
+
     def detect_mfa_is_enabled_for_root(self):
         test_name = "detect_mfa_is_enabled"
         result = []
@@ -423,9 +456,9 @@ class Tester(interfaces.TesterInterface):
         for policy in local_policy['Policies']:
             policy_version = self.aws_iam_client.list_policy_versions(PolicyArn=policy['Arn'])
             for version in policy_version['Versions']:
-                specific_version = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
-                for permissions in specific_version['PolicyVersion']['Document']['Statement']:
-                    if permissions['Effect'] == "Allow" and permissions['Action'] == "*" and permissions['Resource'] == "*":
+                version_permission = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
+                for permission in version_permission['PolicyVersion']['Document']['Statement']:
+                    if permission['Effect'] == "Allow" and permission['Action'] == "*" and permission['Resource'] == "*":
                         result.append(self.json_serialize({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
