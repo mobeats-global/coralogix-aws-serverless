@@ -461,7 +461,7 @@ class Tester(interfaces.TesterInterface):
                 version_permission = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
                 for permission in version_permission['PolicyVersion']['Document']['Statement']:
                     if permission['Effect'] == "Allow" and permission['Action'] == "*" and permission['Resource'] == "*":
-                        result.append(self.json_serialize({
+                        result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
                             "account": self.account_id,
@@ -470,10 +470,10 @@ class Tester(interfaces.TesterInterface):
                             "policy_record": policy,
                             "test_name": test_name,
                             "timestamp": self.date_converter(datetime.datetime.now())
-                        }))
+                        })
 
         if len(result) == 0:
-            result.append(self.json_serialize({
+            result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
@@ -481,6 +481,6 @@ class Tester(interfaces.TesterInterface):
                 "item": None,
                 "item_type": "policy_record",
                 "timestamp": self.date_converter(datetime.datetime.now())
-            }))
+            })
 
         return result
