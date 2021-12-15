@@ -15,9 +15,11 @@ class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.aws_iam_client = boto3.client('iam')        
         self.aws_iam_resource = boto3.resource('iam')
+        self.aws_kms_client = boto3.client('kms')
         self.users = self.aws_iam_client.list_users()
         self.policies = self.aws_iam_client.list_policies()
         self.account_summary = self.aws_iam_client.get_account_summary()
+        self.kms_keys = self.aws_kms_client.list_keys()
         try:
             self.password_policy = self.aws_iam_client.get_account_password_policy()
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
@@ -60,7 +62,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_initial_set_up_keys() + \
             self.detect_user_inline_policy_in_group() + \
             self.detect_mfa_is_enabled_for_root() + \
-            self.detect_full_policy_administrative_privileges()
+            self.detect_full_policy_administrative_privileges() + \
+            self.detect_rotation_for_kms_is_enabled()
 
     def date_converter(self, o):
         if isinstance(o, datetime.datetime):
@@ -480,6 +483,36 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "policy_record",
+                "timestamp": self.date_converter(datetime.datetime.now())
+            })
+
+        return result
+
+    def detect_rotation_for_kms_is_enabled(self):
+        test_name = "rotation_for_kms_is_enabled"
+        result = []
+        for key in self.kms_keys['Keys']:
+            rotation_enabeld = self.aws_kms_client.get_key_rotation_status(KeyId=key['KeyId'])
+            if not rotation_enabeld['KeyRotationEnabled']:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": key['KeyId'] + "@@" + key['KeyArn'],
+                    "item_type": "kms_key_record",
+                    "kms_key_record": key,
+                    "test_name": test_name,
+                    "timestamp": self.date_converter(datetime.datetime.now())
+                })
+        
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "kms_key_record",
                 "timestamp": self.date_converter(datetime.datetime.now())
             })
 
