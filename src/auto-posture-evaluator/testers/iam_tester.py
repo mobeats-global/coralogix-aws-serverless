@@ -64,7 +64,9 @@ class Tester(interfaces.TesterInterface):
             self.detect_full_policy_administrative_privileges() + \
             self.detect_support_role_manages_incidents() + \
             self.detect_user_has_admin_permissions() + \
-            self.detect_role_uses_trusted_principals()
+            self.detect_role_uses_trusted_principals() + \
+            self.detect_hardware_mfa_is_enabled()
+
 
     def date_converter(self, o):
         if isinstance(o, datetime.datetime):
@@ -590,3 +592,43 @@ class Tester(interfaces.TesterInterface):
             })
 
         return result
+
+    def detect_hardware_mfa_is_enabled(self):
+        test_name = "hardware_mfa_is_enabled"
+        result = []
+        for user in self.users['Users']:
+            user_record = copy.copy(user)
+            user_record['CreateDate'] = self.date_converter(user_record['CreateDate'])
+            mfa_devices = self.aws_iam_client.list_mfa_devices(UserName=user['UserName'])
+            if not mfa_devices['MFADevices'] and not self.isPasswordEnabled(user['UserName']):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": user['UserId'] + "@@" + user['UserName'],
+                    "item_type": "user_record",
+                    "user_record": user,
+                    "test_name": test_name,
+                    "timestamp": time.time()
+                })
+
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "user_record",
+                "timestamp": time.time()
+            })
+
+        return result
+
+    def isPasswordEnabled(self, user_name):
+        login_profile = self.aws_iam_resource.LoginProfile(user_name)
+        try:
+            login_profile.create_date
+            return True
+        except:
+            return False
