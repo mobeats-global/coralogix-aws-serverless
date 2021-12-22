@@ -88,7 +88,8 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "user_record",
                     "user_record": user_record,
                     "test_name": test_name,
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
                 })
         
         if len(result) == 0:
@@ -97,9 +98,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": user['UserId'] + "@@" + user['UserName'],
                 "item_type": "user_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         return result
 
@@ -126,7 +128,8 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "policy_record",
                     "policy_record": policy_record,
                     "test_name": test_name,
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
                 })
             
             if len(result) == 0:
@@ -135,9 +138,10 @@ class Tester(interfaces.TesterInterface):
                     "account_arn": self.account_arn,
                     "account": self.account_id,
                     "test_name": test_name,
-                    "item": None,
+                    "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                     "item_type": "policy_record",
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
                 })
 
         return result
@@ -151,9 +155,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -164,7 +169,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
         
         return result
@@ -178,9 +184,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -191,7 +198,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
         
         return result
@@ -208,7 +216,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy,
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
         else:
             result.append({
@@ -216,9 +225,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
             
         return result    
@@ -232,9 +242,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -245,7 +256,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -265,7 +277,8 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "password_policy_record",
                     "password_policy_record": self.password_policy['PasswordPolicy'],
                     "test_name": test_name,
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
                 })
             
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
@@ -279,9 +292,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })    
         return result
 
@@ -294,9 +308,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -307,7 +322,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -322,9 +338,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -335,7 +352,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": password_policy,
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -349,9 +367,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "account_summary@@" + self.account_id,
                 "item_type": "account_summary_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -362,7 +381,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
         
         return result
@@ -382,7 +402,8 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "access_key_record",
                         "access_key_record": None,
                         "test_name": test_name,
-                        "timestamp": time.time()
+                        "timestamp": time.time(),
+                        "test_result": "no_issue_found"
                     })
 
         if len(result) == 0:
@@ -391,9 +412,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": item,
+                "item": "certificate@@" + self.account_id,
                 "item_type": "access_key_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -423,7 +445,8 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "user_record",
                         "user_record": user_record,
                         "test_name": test_name,
-                        "timestamp": time.time()
+                        "timestamp": time.time(),
+                        "test_result": "issue_found"
                     })
         
         if len(result) == 0:
@@ -432,9 +455,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": user['UserId'] + "@@" + user['UserName'],
                 "item_type": "user_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
 
         return result
@@ -448,9 +472,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": "account_summary@@" + self.account_id,
                 "item_type": "account_summary_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -461,7 +486,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -484,7 +510,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "policy_record",
                             "policy_record": policy,
                             "test_name": test_name,
-                            "timestamp": time.time()
+                            "timestamp": time.time(),
+                            "test_result": "issue_found"
                         })
 
         if len(result) == 0:
@@ -493,9 +520,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                 "item_type": "policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
 
         return result
@@ -514,9 +542,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": policy_record['Policy']['PolicyId'] + "@@" + policy_record['Policy']['PolicyName'],
                 "item_type": "policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -527,7 +556,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "policy_record",
                 "policy_record": policy_record['Policy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
@@ -543,9 +573,10 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": None,
+                "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
                 "item_type": "policy_record",
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
             })
         else:
             result.append({
@@ -556,7 +587,8 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "policy_record",
                 "policy_record": policy['Policy'],
                 "test_name": test_name,
-                "timestamp": time.time()
+                "timestamp": time.time(),
+                "test_result": "issue_found"
             })
 
         return result
