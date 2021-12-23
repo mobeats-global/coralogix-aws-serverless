@@ -654,7 +654,7 @@ class Tester(interfaces.TesterInterface):
                         "account": self.account_id,
                         "item": rol['RoleId'] + "@@" + rol['RoleName'],
                         "item_type": "role_record",
-                        "role_record": rol,
+                        "role_record": self.serialize_date_field(rol),
                         "test_name": test_name,
                         "timestamp": self.date_converter(datetime.datetime.now())
                     })
