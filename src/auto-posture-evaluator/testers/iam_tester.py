@@ -121,17 +121,17 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "issue_found"
                 })
             
-            if len(result) == 0:
-               result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "test_name": test_name,
-                    "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
-                    "item_type": "policy_record",
-                    "timestamp": time.time(),
-                    "test_result": "no_issue_found"
-                })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
+                "item_type": "policy_record",
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
+            })
 
         return result
 
