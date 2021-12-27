@@ -39,6 +39,7 @@ class Tester(interfaces.TesterInterface):
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.max_password_age = 90
         self.days_to_expire = 90
+        self.date_time_format = '%m/%d/%Y, %H:%M:%S'
 
     def declare_tested_service(self) -> str:
         return 'iam'
@@ -426,7 +427,7 @@ class Tester(interfaces.TesterInterface):
             return d1 == d2
 
     def str_to_datetime(self, str_date):
-        return datetime.datetime.strptime(str_date, '%m/%d/%Y, %H:%M:%S')
+        return datetime.datetime.strptime(str_date, self.date_time_format)
 
     def date_without_time(self, datetime):
         return date(datetime.year, datetime.month, datetime.day)
