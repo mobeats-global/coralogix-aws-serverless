@@ -102,9 +102,14 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def days_between(self, d1):
-        d1 = date(d1.year, d1.month, d1.day)
         d2 = date.today()
-        return abs((d2 - d1).days)
+        if isinstance(d1, datetime.datetime):
+            d1 = date(d1.year, d1.month, d1.day)
+            return abs((d2 - d1).days)
+        elif isinstance(d1, str):
+            created_date_time = self.str_to_datetime(d1)
+            created_date = self.date_without_time(created_date_time)
+            return abs((d2 - created_date).days)
 
     def detect_attached_users(self):
         test_name = "policy_attached_users"
@@ -416,9 +421,22 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def is_same_date(self, firstDate, secondDate):
-        d1 = date(firstDate.year, firstDate.month, firstDate.day)
-        d2 = date(secondDate.year, secondDate.month, secondDate.day)
-        return d1 == d2
+        if isinstance(firstDate, datetime.datetime) and isinstance(secondDate, datetime.datetime):
+            d1 = self.date_without_time(firstDate)
+            d2 = self.date_without_time(secondDate)
+            return d1 == d2
+        elif isinstance(firstDate, str) and isinstance(secondDate, str):
+            first_date_time = self.str_to_datetime(firstDate)
+            second_date_time = self.str_to_datetime(secondDate)
+            d1 = self.date_without_time(first_date_time)
+            d2 = self.date_without_time(second_date_time)
+            return d1 == d2
+
+    def str_to_datetime(self, str_date):
+        return datetime.datetime.strptime(str_date, '%m/%d/%Y, %H:%M:%S')
+
+    def date_without_time(self, datetime):
+        return date(datetime.year, datetime.month, datetime.day)
 
     def detect_mfa_is_enabled_for_root(self):
         result = []
