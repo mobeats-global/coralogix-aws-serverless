@@ -39,7 +39,6 @@ class Tester(interfaces.TesterInterface):
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.max_password_age = 90
         self.days_to_expire = 90
-        self.date_time_format = '%m/%d/%Y, %H:%M:%S'
 
     def declare_tested_service(self) -> str:
         return 'iam'
@@ -68,45 +67,57 @@ class Tester(interfaces.TesterInterface):
             self.detect_role_uses_trusted_principals()
 
     def detect_old_access_key(self):
-        test_name = "old_access_keys"
-        result = []
-        for user in self.users['Users']:
-            days = self.days_between(user['CreateDate'])
-            if(days > self.days_to_expire):
+        try:
+            test_name = "old_access_keys"
+            result = []
+            for user in self.users['Users']:
+                days = self.days_between(user['CreateDate'])
+                if(days > self.days_to_expire):
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": user['UserId'] + "@@" + user['UserName'],
+                        "item_type": "user_record",
+                        "user_record": self.serialize_date_field(user),
+                        "test_name": test_name,
+                        "timestamp": time.time(),
+                        "test_result": "issue_found"
+                    })
+            
+            if len(result) == 0:
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
                     "account": self.account_id,
+                    "test_name": test_name,
                     "item": user['UserId'] + "@@" + user['UserName'],
                     "item_type": "user_record",
-                    "user_record": self.serialize_date_field(user),
-                    "test_name": test_name,
                     "timestamp": time.time(),
-                    "test_result": "issue_found"
+                    "test_result": "no_issue_found"
                 })
-        
-        if len(result) == 0:
+        except:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": test_name,
                 "item": user['UserId'] + "@@" + user['UserName'],
                 "item_type": "user_record",
+                "user_record": self.serialize_date_field(user),
+                "test_name": test_name,
                 "timestamp": time.time(),
-                "test_result": "no_issue_found"
+                "test_result": "issue_found"
             })
+            
         return result
 
     def days_between(self, d1):
         d2 = date.today()
-        if isinstance(d1, datetime.datetime):
-            d1 = date(d1.year, d1.month, d1.day)
-            return abs((d2 - d1).days)
-        elif isinstance(d1, str):
-            created_date_time = self.str_to_datetime(d1)
-            created_date = self.date_without_time(created_date_time)
-            return abs((d2 - created_date).days)
+        if isinstance(d1, str):
+            d1 = self.str_to_datetime(d1)
+            
+        date_to_compare = self.date_without_time(d1)
+        return abs((d2 - date_to_compare).days)
 
     def detect_attached_users(self):
         test_name = "policy_attached_users"
@@ -383,24 +394,37 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_initial_set_up_keys(self):
-        test_name = "initial_set_up_keys"
-        result = []
-        for user in self.users['Users']:
-            access_keys = self.aws_iam_client.list_access_keys(UserName=user['UserName'])
-            for item in access_keys['AccessKeyMetadata']:
-                if self.is_same_date(user['CreateDate'], item['CreateDate']):
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "item": "certificate@@" + self.account_id,
-                        "item_type": "access_key_record",
-                        "test_name": test_name,
-                        "timestamp": time.time(),
-                        "test_result": "no_issue_found"
-                    })
+        try:
+            test_name = "initial_set_up_keys"
+            result = []
+            for user in self.users['Users']:
+                access_keys = self.aws_iam_client.list_access_keys(UserName=user['UserName'])
+                for item in access_keys['AccessKeyMetadata']:
+                    if self.is_same_date(user['CreateDate'], item['CreateDate']):
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "item": "certificate@@" + self.account_id,
+                            "item_type": "access_key_record",
+                            "test_name": test_name,
+                            "timestamp": time.time(),
+                            "test_result": "no_issue_found"
+                        })
 
-        if len(result) == 0:
+            if len(result) == 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": "certificate@@" + self.account_id,
+                    "item_type": "access_key_record",
+                    "access_key_record": self.serialize_date_field(item),
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
+                })
+        except:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -412,23 +436,22 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "test_result": "issue_found"
             })
-
+            
         return result
 
     def is_same_date(self, firstDate, secondDate):
-        if isinstance(firstDate, datetime.datetime) and isinstance(secondDate, datetime.datetime):
-            d1 = self.date_without_time(firstDate)
-            d2 = self.date_without_time(secondDate)
-            return d1 == d2
-        elif isinstance(firstDate, str) and isinstance(secondDate, str):
-            first_date_time = self.str_to_datetime(firstDate)
-            second_date_time = self.str_to_datetime(secondDate)
-            d1 = self.date_without_time(first_date_time)
-            d2 = self.date_without_time(second_date_time)
-            return d1 == d2
+        if isinstance(firstDate, str):
+            firstDate = self.str_to_datetime(firstDate)
+        if isinstance(secondDate, str):
+            secondDate = self.str_to_datetime(secondDate)
+
+        d1 = self.date_without_time(firstDate)
+        d2 = self.date_without_time(secondDate)
+
+        return d1 == d2
 
     def str_to_datetime(self, str_date):
-        return datetime.datetime.strptime(str_date, self.date_time_format)
+        return datetime.datetime.fromisoformat(str_date)
 
     def date_without_time(self, datetime):
         return date(datetime.year, datetime.month, datetime.day)
@@ -633,3 +656,4 @@ class Tester(interfaces.TesterInterface):
             elif isinstance(value, dict):
                 self.serialize_date_field(value)
         return object
+        
