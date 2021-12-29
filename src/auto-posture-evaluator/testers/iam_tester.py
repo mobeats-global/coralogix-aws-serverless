@@ -651,7 +651,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for user in self.users['Users']:
             mfa_devices = self.aws_iam_client.list_mfa_devices(UserName=user['UserName'])
-            if not mfa_devices['MFADevices'] and not self.is_password_enabled(user['UserName']):
+            if not mfa_devices['MFADevices'] or not self.is_password_enabled(user['UserName']):
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
@@ -678,9 +678,8 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def is_password_enabled(self, user_name):
-        login_profile = self.aws_iam_resource.LoginProfile(user_name)
         try:
-            login_profile.create_date
+            self.aws_iam_client.get_login_profile(UserName=user_name)
             return True
         except:
             return False
