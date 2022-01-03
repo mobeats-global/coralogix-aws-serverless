@@ -5,6 +5,7 @@ import botocore.exceptions
 import interfaces
 import requests
 import urllib.parse
+import os
 from datetime import date
 
 
@@ -21,6 +22,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
+        self.max_password_age = int(os.getenv("MAX_PASSWORD_AGE", 90))
 
     def declare_tested_service(self) -> str:
         return 'iam'
@@ -38,6 +40,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_policy_requires_symbol()
         self.detect_policy_requires_number()
         self.detect_policy_requires_lowercase()
+        self.detect_policy_max_password_age()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -258,4 +261,30 @@ class Tester(interfaces.TesterInterface):
             })
 
         return result
-            
+
+    def detect_policy_max_password_age(self):
+        result = []
+        password_policy = self.password_policy['PasswordPolicy']
+        if (password_policy['ExpirePasswords'] and password_policy['MaxPasswordAge'] <= self.max_password_age):
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_max_password_age',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_max_password_age',
+                "timestamp": time.time()
+            })
+
+        return result
