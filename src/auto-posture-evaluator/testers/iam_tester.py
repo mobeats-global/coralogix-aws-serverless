@@ -2,13 +2,13 @@ import json
 import time
 import boto3
 import botocore.exceptions
+import copy
 import interfaces
 import requests
 import urllib.parse
 import os
-import datetime 
+import datetime
 from datetime import date
-
 
 class Tester(interfaces.TesterInterface):
     
@@ -76,6 +76,10 @@ class Tester(interfaces.TesterInterface):
         result = []
         for user in self.users['Users']:
             days = self.days_between(user['CreateDate'])
+            user_record = copy.copy(user)
+            user_record['CreateDate'] = self.date_converter(user_record['CreateDate'])
+            if 'PasswordLastUsed' in user_record:
+                user_record['PasswordLastUsed'] =  self.date_converter(user_record['PasswordLastUsed'])
             if(days > self.days_to_expire):
                 result.append({
                     "user": self.user_id,
@@ -83,9 +87,9 @@ class Tester(interfaces.TesterInterface):
                     "account": self.account_id,
                     "item": user['UserId'] + "@@" + user['UserName'],
                     "item_type": "user_record",
-                    "user_record": user,
+                    "user_record": user_record,
                     "test_name": test_name,
-                    "timestamp": self.date_converter(time.time())
+                    "timestamp": time.time()
                 })
         
         if len(result) == 0:
@@ -96,7 +100,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "user_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         return result
 
@@ -111,6 +115,9 @@ class Tester(interfaces.TesterInterface):
         for policy in self.policies['Policies']:
             response = self.aws_iam_resource.Policy(policy['Arn'])
             size = sum(1 for _ in response.attached_users.all())
+            policy_record = copy.copy(policy)
+            policy_record['CreateDate'] = self.date_converter(policy_record['CreateDate'])
+            policy_record['UpdateDate'] = self.date_converter(policy_record['UpdateDate'])
             if(size == 0):
                 result.append({
                     "user": self.user_id,
@@ -118,9 +125,9 @@ class Tester(interfaces.TesterInterface):
                     "account": self.account_id,
                     "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                     "item_type": "policy_record",
-                    "policy_record": policy,
+                    "policy_record": policy_record,
                     "test_name": test_name,
-                    "timestamp": self.date_converter(datetime.datetime.now())
+                    "timestamp": time.time()
                 })
             
             if len(result) == 0:
@@ -131,7 +138,7 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "item": None,
                     "item_type": "policy_record",
-                    "timestamp": self.date_converter(datetime.datetime.now())
+                    "timestamp": time.time()
                 })
 
         return result
@@ -147,7 +154,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -158,7 +165,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         
         return result
@@ -174,7 +181,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -185,7 +192,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         
         return result
@@ -202,7 +209,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy,
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -212,7 +219,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
             
         return result    
@@ -228,7 +235,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -239,7 +246,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -259,7 +266,7 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "password_policy_record",
                     "password_policy_record": self.password_policy['PasswordPolicy'],
                     "test_name": test_name,
-                    "timestamp": self.date_converter(datetime.datetime.now())
+                    "timestamp": time.time()
                 })
             
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
@@ -275,7 +282,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })    
         return result
 
@@ -290,7 +297,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -301,7 +308,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -318,7 +325,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -329,7 +336,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "password_policy_record": password_policy,
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -345,7 +352,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "account_summary_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -356,7 +363,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         
         return result
@@ -376,7 +383,7 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "access_key_record",
                         "access_key_record": None,
                         "test_name": test_name,
-                        "timestamp": self.date_converter(datetime.datetime.now())
+                        "timestamp": time.time()
                     })
 
         if len(result) == 0:
@@ -387,7 +394,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": item,
                 "item_type": "access_key_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -461,6 +468,10 @@ class Tester(interfaces.TesterInterface):
         test_name = "user_inline_policy_in_group"
         result = []
         for user in self.users['Users']:
+            user_record = copy.copy(user)
+            user_record['CreateDate'] = self.date_converter(user_record['CreateDate'])
+            if 'PasswordLastUsed' in user_record:
+                user_record['PasswordLastUsed'] =  self.date_converter(user_record['PasswordLastUsed'])
             user_group = self.aws_iam_client.list_groups_for_user(UserName=user['UserName'])
             for group in user_group['Groups']:
                 group_policy = self.aws_iam_client.list_attached_group_policies(GroupName=group['GroupName'])
@@ -471,9 +482,9 @@ class Tester(interfaces.TesterInterface):
                         "account": self.account_id,
                         "item": user['UserId'] + "@@" + user['UserName'],
                         "item_type": "user_record",
-                        "user_record": user,
+                        "user_record": user_record,
                         "test_name": test_name,
-                        "timestamp": self.date_converter(datetime.datetime.now())
+                        "timestamp": time.time()
                     })
         
         if len(result) == 0:
@@ -484,7 +495,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "user_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -500,7 +511,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "account_summary_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -511,7 +522,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -534,7 +545,7 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "policy_record",
                             "policy_record": policy,
                             "test_name": test_name,
-                            "timestamp": self.date_converter(datetime.datetime.now())
+                            "timestamp": time.time()
                         })
 
         if len(result) == 0:
@@ -545,7 +556,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -554,7 +565,10 @@ class Tester(interfaces.TesterInterface):
         test_name = "support_role_manages_incidents"
         result = []
         policy = self.aws_iam_client.get_policy(PolicyArn="arn:aws:iam::aws:policy/AWSSupportAccess")
-        entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy['Policy']['Arn'], EntityFilter='Role', PolicyUsageFilter='PermissionsPolicy')
+        policy_record = copy.copy(policy)
+        policy_record['Policy']['CreateDate'] = self.date_converter(policy_record['Policy']['CreateDate'])
+        policy_record['Policy']['UpdateDate'] = self.date_converter(policy_record['Policy']['UpdateDate'])
+        entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_record['Policy']['Arn'], EntityFilter='Role', PolicyUsageFilter='PermissionsPolicy')
         if entities['PolicyRoles']:
             result.append({
                 "user": self.user_id,
@@ -563,18 +577,18 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
+                "item": policy_record['Policy']['PolicyId'] + "@@" + policy_record['Policy']['PolicyName'],
                 "item_type": "policy_record",
-                "policy_record": policy['Policy'],
+                "policy_record": policy_record['Policy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
@@ -592,7 +606,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "policy_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
         else:
             result.append({
@@ -603,7 +617,7 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "policy_record",
                 "policy_record": policy['Policy'],
                 "test_name": test_name,
-                "timestamp": self.date_converter(datetime.datetime.now())
+                "timestamp": time.time()
             })
 
         return result
