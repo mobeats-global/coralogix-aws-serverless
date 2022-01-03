@@ -58,7 +58,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_root_access_key_is_present() + \
             self.detect_initial_set_up_keys() + \
             self.detect_mfa_is_enabled_for_root() + \
-            self.detect_full_policy_administrative_privileges()
+            self.detect_full_policy_administrative_privileges() + \
+            self.detect_user_inline_policy_in_group()
     
     def json_serialize(self, body): 
         return json.dumps(body, default=str)
@@ -299,6 +300,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_policy_max_password_age(self):
+        test_name = "policy_max_password_age"
         result = []
         password_policy = self.password_policy['PasswordPolicy']
         if (password_policy['ExpirePasswords'] and password_policy['MaxPasswordAge'] <= self.max_password_age):
@@ -306,7 +308,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_max_password_age',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
@@ -319,20 +321,21 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": password_policy,
-                "test_name": 'policy_max_password_age',
+                "test_name": test_name,
                 "timestamp": time.time()
             }))
 
         return result
 
     def detect_root_access_key_is_present(self):
+        test_name = "root_access_key_is_present"
         result = []
         if self.account_summary['SummaryMap']['AccountAccessKeysPresent']:
             result.append(self.json_serialize({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'access_key_is_present',
+                "test_name": test_name,
                 "item": None,
                 "item_type": "account_summary_record",
                 "timestamp": time.time()
@@ -345,13 +348,14 @@ class Tester(interfaces.TesterInterface):
                 "item": "account_summary@@" + self.account_id,
                 "item_type": "account_summary_record",
                 "account_summary_record": self.account_summary['SummaryMap'],
-                "test_name": 'access_key_is_present',
+                "test_name": test_name,
                 "timestamp": time.time()
             }))
         
         return result
 
     def detect_initial_set_up_keys(self):
+        test_name = "initial_set_up_keys"
         result = []
         for user in self.users['Users']:
             access_keys = self.aws_iam_client.list_access_keys(UserName=user['UserName'])
@@ -364,7 +368,7 @@ class Tester(interfaces.TesterInterface):
                         "item": "certificate@@" + self.account_id,
                         "item_type": "access_key_record",
                         "access_key_record": None,
-                        "test_name": 'initial_set_up_keys',
+                        "test_name": test_name,
                         "timestamp": time.time()
                     }))
 
@@ -373,7 +377,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'initial_set_up_keys',
+                "test_name": test_name,
                 "item": item,
                 "item_type": "access_key_record",
                 "timestamp": time.time()
@@ -441,6 +445,38 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": None,
                 "item_type": "policy_record",
+                "timestamp": time.time()
+            }))
+
+        return result
+
+    def detect_user_inline_policy_in_group(self):
+        test_name = "user_inline_policy_in_group"
+        result = []
+        for user in self.users['Users']:
+            user_group = self.aws_iam_client.list_groups_for_user(UserName=user['UserName'])
+            for group in user_group['Groups']:
+                group_policy = self.aws_iam_client.list_attached_group_policies(GroupName=group['GroupName'])
+                if len(group_policy['AttachedPolicies']) > 0:
+                    result.append(self.json_serialize({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": user['UserId'] + "@@" + user['UserName'],
+                        "item_type": "user_record",
+                        "user_record": user,
+                        "test_name": test_name,
+                        "timestamp": time.time()
+                    }))
+        
+        if len(result) == 0:
+            result.append(self.json_serialize({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "user_record",
                 "timestamp": time.time()
             }))
 
