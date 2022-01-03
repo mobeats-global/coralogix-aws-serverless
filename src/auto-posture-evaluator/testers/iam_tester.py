@@ -35,6 +35,7 @@ class Tester(interfaces.TesterInterface):
         self.detect_policy_prevents_password_reuse()
         self.detect_policy_requires_symbol()
         self.detect_policy_requires_number()
+        self.detect_policy_requires_lowercase()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -229,3 +230,30 @@ class Tester(interfaces.TesterInterface):
             })    
         
         return result
+
+    def detect_policy_requires_lowercase(self):
+        result = []
+        if self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_lowercase',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_lowercase',
+                "timestamp": time.time()
+            })
+
+        return result
+            
