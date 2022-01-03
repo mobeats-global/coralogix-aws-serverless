@@ -17,6 +17,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_iam_resource = boto3.resource('iam')
         self.users = self.aws_iam_client.list_users()
         self.policies = self.aws_iam_client.list_policies()
+        self.roles = self.aws_iam_client.list_roles()
         self.account_summary = self.aws_iam_client.get_account_summary()
         try:
             self.password_policy = self.aws_iam_client.get_account_password_policy()
@@ -63,7 +64,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_mfa_is_enabled_for_root() + \
             self.detect_full_policy_administrative_privileges() + \
             self.detect_support_role_manages_incidents() + \
-            self.detect_user_has_admin_permissions()
+            self.detect_user_has_admin_permissions() + \
+            self.detect_role_uses_trusted_principals()
 
     def date_converter(self, o):
         if isinstance(o, datetime.datetime):
@@ -601,6 +603,36 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "policy_record",
                 "policy_record": policy['Policy'],
                 "test_name": test_name,
+                "timestamp": self.date_converter(datetime.datetime.now())
+            })
+
+        return result
+
+    def detect_role_uses_trusted_principals(self):
+        test_name = "role_uses_trusted_principals"
+        result = []
+        for rol in self.roles['Roles']:
+            for statement in rol['AssumeRolePolicyDocument']['Statement']:
+                if not 'Principal' in statement:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": rol['RoleId'] + "@@" + rol['RoleName'],
+                        "item_type": "role_record",
+                        "role_record": rol,
+                        "test_name": test_name,
+                        "timestamp": self.date_converter(datetime.datetime.now())
+                    })
+        
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "role_record",
                 "timestamp": self.date_converter(datetime.datetime.now())
             })
 
