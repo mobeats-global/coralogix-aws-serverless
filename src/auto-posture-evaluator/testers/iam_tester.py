@@ -31,9 +31,10 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         self.detect_old_access_key()
         self.detect_attacched_users()
-        self.detect_policy_require_symbols()
         self.detect_password_policy_length()
         self.detect_policy_prevents_password_reuse()
+        self.detect_policy_requires_symbol()
+        self.detect_policy_requires_number()
 
     def detect_old_access_key(self) -> str:
         result = []
@@ -98,9 +99,9 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def detect_policy_require_symbols(self):
+    def detect_policy_requires_symbol(self):
         result = []
-        if (self.password_policy['PasswordPolicy']['RequireSymbols']):
+        if self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -108,7 +109,7 @@ class Tester(interfaces.TesterInterface):
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": 'policy_require_symbol',
+                "test_name": 'policy_requires_symbol',
                 "timestamp": time.time()
             })
         else:
@@ -116,7 +117,33 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "test_name": 'policy_require_symbol',
+                "test_name": 'policy_requires_symbol',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+        
+        return result
+
+    def detect_policy_requires_number(self):
+        result = []
+        if self.password_policy['PasswordPolicy']['RequireNumbers']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_number',
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_number',
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
