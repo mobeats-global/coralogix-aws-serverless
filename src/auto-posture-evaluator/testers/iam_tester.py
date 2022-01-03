@@ -67,19 +67,11 @@ class Tester(interfaces.TesterInterface):
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals()
 
-    def date_converter(self, o):
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
-
     def detect_old_access_key(self):
         test_name = "old_access_keys"
         result = []
         for user in self.users['Users']:
             days = self.days_between(user['CreateDate'])
-            user_record = copy.copy(user)
-            user_record['CreateDate'] = self.date_converter(user_record['CreateDate'])
-            if 'PasswordLastUsed' in user_record:
-                user_record['PasswordLastUsed'] =  self.date_converter(user_record['PasswordLastUsed'])
             if(days > self.days_to_expire):
                 result.append({
                     "user": self.user_id,
@@ -87,7 +79,7 @@ class Tester(interfaces.TesterInterface):
                     "account": self.account_id,
                     "item": user['UserId'] + "@@" + user['UserName'],
                     "item_type": "user_record",
-                    "user_record": user_record,
+                    "user_record": self.serialize_date_field(user),
                     "test_name": test_name,
                     "timestamp": time.time(),
                     "test_result": "issue_found"
@@ -117,9 +109,6 @@ class Tester(interfaces.TesterInterface):
         for policy in self.policies['Policies']:
             response = self.aws_iam_resource.Policy(policy['Arn'])
             size = sum(1 for _ in response.attached_users.all())
-            policy_record = copy.copy(policy)
-            policy_record['CreateDate'] = self.date_converter(policy_record['CreateDate'])
-            policy_record['UpdateDate'] = self.date_converter(policy_record['UpdateDate'])
             if(size == 0):
                 result.append({
                     "user": self.user_id,
@@ -127,7 +116,7 @@ class Tester(interfaces.TesterInterface):
                     "account": self.account_id,
                     "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                     "item_type": "policy_record",
-                    "policy_record": policy_record,
+                    "policy_record": self.serialize_date_field(policy),
                     "test_name": test_name,
                     "timestamp": time.time(),
                     "test_result": "issue_found"
@@ -168,7 +157,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "password_policy_record": self.serialize_date_field(self.password_policy['PasswordPolicy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -197,7 +186,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "password_policy_record": self.serialize_date_field(self.password_policy['PasswordPolicy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -215,7 +204,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy,
+                "password_policy_record": self.serialize_date_field(self.password_policy),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -255,7 +244,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "password_policy_record": self.serialize_date_field(self.password_policy['PasswordPolicy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -276,7 +265,7 @@ class Tester(interfaces.TesterInterface):
                     "account": self.account_id,
                     "item": "password_policy@@" + self.account_id,
                     "item_type": "password_policy_record",
-                    "password_policy_record": self.password_policy['PasswordPolicy'],
+                    "password_policy_record": self.serialize_date_field(self.password_policy['PasswordPolicy']),
                     "test_name": test_name,
                     "timestamp": time.time(),
                     "test_result": "issue_found"
@@ -321,7 +310,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "password_policy_record": self.serialize_date_field(self.password_policy['PasswordPolicy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -351,7 +340,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": password_policy,
+                "password_policy_record": self.serialize_date_field(password_policy),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -380,7 +369,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "account_summary@@" + self.account_id,
                 "item_type": "account_summary_record",
-                "account_summary_record": self.account_summary['SummaryMap'],
+                "account_summary_record": self.serialize_date_field(self.account_summary['SummaryMap']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -399,10 +388,8 @@ class Tester(interfaces.TesterInterface):
                         "user": self.user_id,
                         "account_arn": self.account_arn,
                         "account": self.account_id,
-                        "item": "certificate@@" + self.account_id,
-                        "item_type": "access_key_record",
-                        "access_key_record": None,
                         "test_name": test_name,
+                        "item": "certificate@@" + self.account_id,
                         "timestamp": time.time(),
                         "test_result": "no_issue_found"
                     })
@@ -490,10 +477,6 @@ class Tester(interfaces.TesterInterface):
         test_name = "user_inline_policy_in_group"
         result = []
         for user in self.users['Users']:
-            user_record = copy.copy(user)
-            user_record['CreateDate'] = self.date_converter(user_record['CreateDate'])
-            if 'PasswordLastUsed' in user_record:
-                user_record['PasswordLastUsed'] =  self.date_converter(user_record['PasswordLastUsed'])
             user_group = self.aws_iam_client.list_groups_for_user(UserName=user['UserName'])
             for group in user_group['Groups']:
                 group_policy = self.aws_iam_client.list_attached_group_policies(GroupName=group['GroupName'])
@@ -504,7 +487,7 @@ class Tester(interfaces.TesterInterface):
                         "account": self.account_id,
                         "item": user['UserId'] + "@@" + user['UserName'],
                         "item_type": "user_record",
-                        "user_record": user_record,
+                        "user_record": self.serialize_date_field(user),
                         "test_name": test_name,
                         "timestamp": time.time(),
                         "test_result": "issue_found"
@@ -527,7 +510,7 @@ class Tester(interfaces.TesterInterface):
     def detect_mfa_is_enabled_for_root(self):
         test_name = "detect_mfa_is_enabled"
         result = []
-        if self.account_summary['SummaryMap']['AccountMFAEnabled']:
+        if not self.account_summary['SummaryMap']['AccountMFAEnabled']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -545,7 +528,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": "account_summary@@" + self.account_id,
                 "item_type": "account_summary_record",
-                "account_summary_record": self.account_summary['SummaryMap'],
+                "account_summary_record": self.serialize_date_field(self.account_summary['SummaryMap']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -569,7 +552,7 @@ class Tester(interfaces.TesterInterface):
                             "account": self.account_id,
                             "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
                             "item_type": "policy_record",
-                            "policy_record": policy,
+                            "policy_record": self.serialize_date_field(policy),
                             "test_name": test_name,
                             "timestamp": time.time(),
                             "test_result": "issue_found"
@@ -593,17 +576,14 @@ class Tester(interfaces.TesterInterface):
         test_name = "support_role_manages_incidents"
         result = []
         policy = self.aws_iam_client.get_policy(PolicyArn="arn:aws:iam::aws:policy/AWSSupportAccess")
-        policy_record = copy.copy(policy)
-        policy_record['Policy']['CreateDate'] = self.date_converter(policy_record['Policy']['CreateDate'])
-        policy_record['Policy']['UpdateDate'] = self.date_converter(policy_record['Policy']['UpdateDate'])
-        entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_record['Policy']['Arn'], EntityFilter='Role', PolicyUsageFilter='PermissionsPolicy')
+        entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy['Policy']['Arn'], EntityFilter='Role', PolicyUsageFilter='PermissionsPolicy')
         if entities['PolicyRoles']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "test_name": test_name,
-                "item": policy_record['Policy']['PolicyId'] + "@@" + policy_record['Policy']['PolicyName'],
+                "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
                 "item_type": "policy_record",
                 "timestamp": time.time(),
                 "test_result": "no_issue_found"
@@ -613,9 +593,9 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "item": policy_record['Policy']['PolicyId'] + "@@" + policy_record['Policy']['PolicyName'],
+                "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
                 "item_type": "policy_record",
-                "policy_record": policy_record['Policy'],
+                "policy_record": self.serialize_date_field(policy['Policy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -646,7 +626,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
                 "item_type": "policy_record",
-                "policy_record": policy['Policy'],
+                "policy_record": self.serialize_date_field(policy['Policy']),
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -683,3 +663,11 @@ class Tester(interfaces.TesterInterface):
             })
 
         return result
+
+    def serialize_date_field(self, object):
+        for key, value in object.items():
+            if isinstance(value, datetime.datetime):
+                object[key] = value.__str__()
+            elif isinstance(value, dict):
+                self.serialize_date_field(value)
+        return object
