@@ -101,7 +101,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_symbol(self):
         result = []
-        if self.password_policy['PasswordPolicy']['RequireSymbols']:
+        if not self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -127,7 +127,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_policy_requires_number(self):
         result = []
-        if self.password_policy['PasswordPolicy']['RequireNumbers']:
+        if not self.password_policy['PasswordPolicy']['RequireNumbers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -176,6 +176,32 @@ class Tester(interfaces.TesterInterface):
             })
             
         return result    
+
+    def detect_policy_requires_uppercase(self):
+        result = []
+        if not self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "test_name": 'policy_requires_uppercase',
+                "timestamp": time.time()
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": 'policy_requires_uppercase',
+                "item": None,
+                "item_type": "password_policy_record",
+                "timestamp": time.time()
+            })
+
+        return result
 
     def detect_policy_prevents_password_reuse(self):
         result = []
