@@ -63,10 +63,6 @@ class Tester(interfaces.TesterInterface):
             self.detect_role_uses_trusted_principals() + \
             self.detect_rotation_for_kms_is_enabled()
 
-    def date_converter(self, o):
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
-
     def detect_old_access_key(self):
         try:
             test_name = "old_access_keys"
@@ -654,29 +650,33 @@ class Tester(interfaces.TesterInterface):
         test_name = "rotation_for_kms_is_enabled"
         result = []
         for key in self.kms_keys['Keys']:
-            rotation_enabeld = self.aws_kms_client.get_key_rotation_status(KeyId=key['KeyId'])
-            if not rotation_enabeld['KeyRotationEnabled']:
+            issue_detected = False
+            key_rotation_status = self.aws_kms_client.get_key_rotation_status(KeyId=key['KeyId'])
+            if not key_rotation_status['KeyRotationEnabled']:
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
                     "account": self.account_id,
                     "item": key['KeyId'] + "@@" + key['KeyArn'],
                     "item_type": "kms_key_record",
-                    "kms_key_record": key,
+                    "kms_key_record": self.serialize_date_field(key),
                     "test_name": test_name,
-                    "timestamp": self.date_converter(datetime.datetime.now())
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
                 })
+                issue_detected = True
         
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": None,
-                "item_type": "kms_key_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
-            })
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": key['KeyId'] + "@@" + key['KeyArn'],
+                    "item_type": "kms_key_record",
+                    "test_name": test_name,
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
 
         return result
 
