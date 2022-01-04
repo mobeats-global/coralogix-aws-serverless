@@ -26,7 +26,6 @@ class Tester(interfaces.TesterInterface):
                     'RequireLowercaseCharacters': True
                 }
             }
-        self.account_summary = self.aws_iam_client.get_account_summary()
         self.access_key = self.aws_iam_resource.AccessKey('user_name','id')
         self.cache = {}
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
@@ -54,15 +53,12 @@ class Tester(interfaces.TesterInterface):
             self.detect_policy_max_password_age() + \
             self.detect_root_access_key_is_present() + \
             self.detect_initial_set_up_keys() + \
+            self.detect_user_inline_policy_in_group() + \
             self.detect_mfa_is_enabled_for_root() + \
             self.detect_full_policy_administrative_privileges() + \
-            self.detect_user_inline_policy_in_group() + \
             self.detect_support_role_manages_incidents() + \
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals()
-    
-    def json_serialize(self, body): 
-        return json.dumps(body, default=str)
 
     def detect_old_access_key(self):
         try:
@@ -234,7 +230,6 @@ class Tester(interfaces.TesterInterface):
             })
             
         return result    
-
 
     def detect_policy_requires_uppercase(self):
         test_name = "policy_requires_uppercase"
@@ -427,8 +422,8 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "test_name": test_name,
                 "item": "certificate@@" + self.account_id,
-                "user_record": self.serialize_date_field(item),
                 "item_type": "access_key_record",
+                "access_key_record": self.serialize_date_field(item),
                 "timestamp": time.time(),
                 "test_result": "issue_found"
             })
@@ -451,67 +446,6 @@ class Tester(interfaces.TesterInterface):
 
     def date_without_time(self, datetime):
         return date(datetime.year, datetime.month, datetime.day)
-
-    def detect_mfa_is_enabled_for_root(self):
-        result = []
-        if self.account_summary['SummaryMap']['AccountMFAEnabled']:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": 'detect_mfa_is_enabled',
-                "item": None,
-                "item_type": "account_summary_record",
-                "timestamp": time.time()
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "item": "account_summary@@" + self.account_id,
-                "item_type": "account_summary_record",
-                "account_summary_record": self.account_summary['SummaryMap'],
-                "test_name": 'detect_mfa_is_enabled',
-                "timestamp": time.time()
-            })
-
-        return result
-
-    def detect_full_policy_administrative_privileges(self):
-        test_name = "full_policy_administrative_privileges"
-        result = []
-        local_policy = self.aws_iam_client.list_policies(Scope='Local')
-        for policy in local_policy['Policies']:
-            policy_version = self.aws_iam_client.list_policy_versions(PolicyArn=policy['Arn'])
-            for version in policy_version['Versions']:
-                specific_version = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
-                for permissions in specific_version['PolicyVersion']['Document']['Statement']:
-                    if permissions['Effect'] == "Allow" and permissions['Action'] == "*" and permissions['Resource'] == "*":
-                        result.append(self.json_serialize({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
-                            "item_type": "policy_record",
-                            "policy_record": policy,
-                            "test_name": test_name,
-                            "timestamp": time.time()
-                        }))
-
-        if len(result) == 0:
-            result.append(self.json_serialize({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": None,
-                "item_type": "policy_record",
-                "timestamp": time.time()
-            }))
-
-        return result
-
 
     def detect_user_inline_policy_in_group(self):
         test_name = "user_inline_policy_in_group"
@@ -613,7 +547,7 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
-    
+
     def detect_support_role_manages_incidents(self):
         test_name = "support_role_manages_incidents"
         result = []
@@ -691,7 +625,8 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "role_record",
                         "role_record": self.serialize_date_field(rol),
                         "test_name": test_name,
-                        "timestamp": self.date_converter(datetime.datetime.now())
+                        "timestamp": time.time(),
+                        "test_result": "issue_found"
                     })
                     issue_detected = True
             if not issue_detected:
