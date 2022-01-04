@@ -16,7 +16,10 @@ class Tester(interfaces.TesterInterface):
         self.aws_iam_resource = boto3.resource('iam')
         self.users = self.aws_iam_client.list_users()
         self.policies = self.aws_iam_client.list_policies()
-        self.password_policy = self.aws_iam_client.get_account_password_policy()
+        try:
+            self.password_policy = self.aws_iam_client.get_account_password_policy()
+        except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
+            self.password_policy = None
         self.account_summary = self.aws_iam_client.get_account_summary()
         self.access_key = self.aws_iam_resource.AccessKey('user_name','id')
         self.cache = {}
@@ -34,6 +37,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         return \
+            self.detect_policy_prevents_password_reuse() + \
             self.detect_old_access_key() + \
             self.detect_attached_users() + \
             self.detect_policy_requires_symbol() + \
@@ -114,7 +118,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_symbol(self):
         test_name = "policy_requires_symbol"
         result = []
-        if self.password_policy['PasswordPolicy']['RequireSymbols']:
+        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -141,7 +145,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_number(self):
         test_name = "policy_requires_number"
         result = []
-        if self.password_policy['PasswordPolicy']['RequireNumbers']:
+        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireNumbers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -168,14 +172,14 @@ class Tester(interfaces.TesterInterface):
     def detect_password_policy_length(self):
         test_name = "minimum_password_policy_length"
         result = []
-        if self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
+        if self.password_policy is None or self.password_policy['PasswordPolicy']['MinimumPasswordLength'] < 14:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "item": "password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
+                "password_policy_record": self.password_policy,
                 "test_name": test_name,
                 "timestamp": time.time()
             })
@@ -196,7 +200,7 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_requires_uppercase(self):
         test_name = "policy_requires_uppercase"
         result = []
-        if self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
+        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireUppercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -222,19 +226,27 @@ class Tester(interfaces.TesterInterface):
     def detect_policy_prevents_password_reuse(self):
         test_name = "prevents_password_reuse"
         result = []
-        account_password_policy = self.aws_iam_resource.AccountPasswordPolicy()
-        if (account_password_policy.password_reuse_prevention is None or account_password_policy.password_reuse_prevention == 0):
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "password_policy_record": self.password_policy['PasswordPolicy'],
-                "test_name": test_name,
-                "timestamp": time.time()
-            })
-        else:
+        try:
+            account_password_policy = self.aws_iam_resource.AccountPasswordPolicy()
+            if ((not account_password_policy.password_reuse_prevention is None and isinstance(account_password_policy.password_reuse_prevention, int)) 
+            or account_password_policy.password_reuse_prevention == 0):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "password_policy_record": self.password_policy['PasswordPolicy'],
+                    "test_name": test_name,
+                    "timestamp": time.time()
+                })
+            
+        except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
+            account_password_policy = None
+        except Exception as ex:    
+            account_password_policy = None
+        
+        if len(result) == 0:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -243,14 +255,14 @@ class Tester(interfaces.TesterInterface):
                 "item": None,
                 "item_type": "password_policy_record",
                 "timestamp": time.time()
-            })
-
+            })    
+        
         return result
 
     def detect_policy_requires_lowercase(self):
         test_name = "policy_requires_lowercase"
         result = []
-        if self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
+        if self.password_policy is None or self.password_policy['PasswordPolicy']['RequireLowercaseCharacters']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
