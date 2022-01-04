@@ -1,12 +1,6 @@
-import json
 import time
 import boto3
-import botocore.exceptions
-import copy
 import interfaces
-import requests
-import urllib.parse
-import os
 import datetime
 from datetime import date
 
@@ -88,18 +82,17 @@ class Tester(interfaces.TesterInterface):
                         "timestamp": time.time(),
                         "test_result": "issue_found"
                     })
-            
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "test_name": test_name,
-                    "item": user['UserId'] + "@@" + user['UserName'],
-                    "item_type": "user_record",
-                    "timestamp": time.time(),
-                    "test_result": "no_issue_found"
-                })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "test_name": test_name,
+                        "item": user['UserId'] + "@@" + user['UserName'],
+                        "item_type": "user_record",
+                        "timestamp": time.time(),
+                        "test_result": "no_issue_found"
+                    })
         except:
             result.append({
                 "user": self.user_id,
@@ -141,18 +134,17 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found"
                 })
-            
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
-                "item_type": "policy_record",
-                "timestamp": time.time(),
-                "test_result": "no_issue_found"
-            })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
+                    "item_type": "policy_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
 
         return result
 
@@ -291,24 +283,23 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found"
                 })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
             
         except self.aws_iam_client.exceptions.NoSuchEntityException as ex:
             account_password_policy = None
         except Exception as ex:    
             account_password_policy = None
         
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "timestamp": time.time(),
-                "test_result": "no_issue_found"
-            })    
-
         return result
 
     def detect_policy_requires_lowercase(self):
@@ -417,19 +408,18 @@ class Tester(interfaces.TesterInterface):
                             "timestamp": time.time(),
                             "test_result": "no_issue_found"
                         })
-
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "test_name": test_name,
-                    "item": "certificate@@" + self.account_id,
-                    "item_type": "access_key_record",
-                    "access_key_record": self.serialize_date_field(item),
-                    "timestamp": time.time(),
-                    "test_result": "issue_found"
-                })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "test_name": test_name,
+                            "item": "certificate@@" + self.account_id,
+                            "item_type": "access_key_record",
+                            "access_key_record": self.serialize_date_field(item),
+                            "timestamp": time.time(),
+                            "test_result": "issue_found"
+                        })
         except:
             result.append({
                 "user": self.user_id,
@@ -527,6 +517,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "user_inline_policy_in_group"
         result = []
         for user in self.users['Users']:
+            issue_detected = False
             user_group = self.aws_iam_client.list_groups_for_user(UserName=user['UserName'])
             for group in user_group['Groups']:
                 group_policy = self.aws_iam_client.list_attached_group_policies(GroupName=group['GroupName'])
@@ -542,18 +533,18 @@ class Tester(interfaces.TesterInterface):
                         "timestamp": time.time(),
                         "test_result": "issue_found"
                     })
-        
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": user['UserId'] + "@@" + user['UserName'],
-                "item_type": "user_record",
-                "timestamp": time.time(),
-                "test_result": "no_issue_found"
-            })
+                    issue_detected = True
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": user['UserId'] + "@@" + user['UserName'],
+                    "item_type": "user_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
 
         return result
 
@@ -591,6 +582,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         local_policy = self.aws_iam_client.list_policies(Scope='Local')
         for policy in local_policy['Policies']:
+            issue_detected = False
             policy_version = self.aws_iam_client.list_policy_versions(PolicyArn=policy['Arn'])
             for version in policy_version['Versions']:
                 version_permission = self.aws_iam_client.get_policy_version(PolicyArn=policy['Arn'], VersionId=version['VersionId'])
@@ -607,18 +599,18 @@ class Tester(interfaces.TesterInterface):
                             "timestamp": time.time(),
                             "test_result": "issue_found"
                         })
-
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
-                "item_type": "policy_record",
-                "timestamp": time.time(),
-                "test_result": "no_issue_found"
-            })
+                        issue_detected = True
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": policy['PolicyId'] + "@@" + policy['PolicyName'],
+                    "item_type": "policy_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
 
         return result
     
@@ -688,6 +680,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "role_uses_trusted_principals"
         result = []
         for rol in self.roles['Roles']:
+            issue_detected = False
             for statement in rol['AssumeRolePolicyDocument']['Statement']:
                 if not 'Principal' in statement:
                     result.append({
@@ -700,17 +693,18 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "timestamp": self.date_converter(datetime.datetime.now())
                     })
-        
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "test_name": test_name,
-                "item": None,
-                "item_type": "role_record",
-                "timestamp": self.date_converter(datetime.datetime.now())
-            })
+                    issue_detected = True
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": rol['RoleId'] + "@@" + rol['RoleName'],
+                    "item_type": "role_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
 
         return result
 
