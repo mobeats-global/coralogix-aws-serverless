@@ -62,7 +62,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_mfa_is_enabled_for_root() + \
             self.detect_full_policy_administrative_privileges() + \
             self.detect_user_inline_policy_in_group() + \
-            self.detect_support_role_manages_incidents()
+            self.detect_support_role_manages_incidents() + \
+            self.detect_user_has_admin_permissions()
     
     def json_serialize(self, body): 
         return json.dumps(body, default=str)
@@ -559,6 +560,35 @@ class Tester(interfaces.TesterInterface):
         policy = self.aws_iam_client.get_policy(PolicyArn="arn:aws:iam::aws:policy/AWSSupportAccess")
         entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy['Policy']['Arn'], EntityFilter='Role', PolicyUsageFilter='PermissionsPolicy')
         if entities['PolicyRoles']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": None,
+                "item_type": "policy_record",
+                "timestamp": self.date_converter(datetime.datetime.now())
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": policy['Policy']['PolicyId'] + "@@" + policy['Policy']['PolicyName'],
+                "item_type": "policy_record",
+                "policy_record": policy['Policy'],
+                "test_name": test_name,
+                "timestamp": self.date_converter(datetime.datetime.now())
+            })
+
+        return result
+
+    def detect_user_has_admin_permissions(self):
+        test_name = "user_has_admin_permissions"
+        result = []
+        policy = self.aws_iam_client.get_policy(PolicyArn="arn:aws:iam::aws:policy/AdministratorAccess")
+        entities = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy['Policy']['Arn'], EntityFilter='User', PolicyUsageFilter='PermissionsPolicy')
+        if entities['PolicyUsers']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
