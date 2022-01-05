@@ -61,9 +61,9 @@ class Tester(interfaces.TesterInterface):
             self.detect_role_uses_trusted_principals()
 
     def detect_old_access_key(self):
+        test_name = "old_access_keys"
+        result = []
         try:
-            test_name = "old_access_keys"
-            result = []
             for user in self.users['Users']:
                 days = self.days_between(user['CreateDate'])
                 if(days > self.days_to_expire):
@@ -96,7 +96,9 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "item": user['UserId'] + "@@" + user['UserName'],
                 "item_type": "user_record",
-                "user_record": self.serialize_date_field(user),
+                "user_record": {
+                    "error" : "Incorrect create date type in user."
+                },
                 "test_name": test_name,
                 "timestamp": time.time(),
                 "test_result": "issue_found"
@@ -386,9 +388,9 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_initial_set_up_keys(self):
+        test_name = "initial_set_up_keys"
+        result = []
         try:
-            test_name = "initial_set_up_keys"
-            result = []
             for user in self.users['Users']:
                 access_keys = self.aws_iam_client.list_access_keys(UserName=user['UserName'])
                 for item in access_keys['AccessKeyMetadata']:
@@ -423,7 +425,9 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "item": "certificate@@" + self.account_id,
                 "item_type": "access_key_record",
-                "access_key_record": self.serialize_date_field(item),
+                "access_key_record": {
+                    "error": "Incorrect create date type in user or access key."
+                },
                 "timestamp": time.time(),
                 "test_result": "issue_found"
             })
