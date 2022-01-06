@@ -94,7 +94,7 @@ class Tester(interfaces.TesterInterface):
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
-                "item": user['UserId'] + "@@" + user['UserName'],
+                "item": "user_record@@" + self.account_id,
                 "item_type": "user_record",
                 "user_record": {
                     "error" : "Incorrect create date type in user."
