@@ -59,7 +59,7 @@ class Tester(interfaces.TesterInterface):
             self.detect_support_role_manages_incidents() + \
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals() + \
-            self.detect_expired_server_certificate()
+            self.detect_expired_server_certificates()
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -648,8 +648,8 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def detect_expired_server_certificate(self):
-        test_name = 'expired_server_certificate'
+    def detect_expired_server_certificates(self):
+        test_name = 'expired_server_certificates'
         result = []
         try:
             server_certificates = self.aws_iam_client.list_server_certificates()
@@ -695,7 +695,6 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def is_date_expired(self, d1):
-        d1 = 2
         d2 = date.today()
         if isinstance(d1, str):
             d1 = self.str_to_datetime(d1)
