@@ -32,7 +32,8 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.max_password_age = 90
-        self.days_to_expire = 90
+        self.access_key_days_to_expire = 90
+        self.server_certificate_days_to_expire = 30
 
     def declare_tested_service(self) -> str:
         return 'iam'
@@ -60,7 +61,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals() + \
             self.detect_expired_server_certificates() + \
-            self.detect_mfa_is_enabled_for_users()
+            self.detect_mfa_is_enabled_for_users() + \
+            self.detect_validity_period_of_server_certificates()
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -68,7 +70,7 @@ class Tester(interfaces.TesterInterface):
         try:
             for user in self.users['Users']:
                 days = self.days_between(user['CreateDate'])
-                if(days > self.days_to_expire):
+                if(days > self.access_key_days_to_expire):
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -650,7 +652,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_expired_server_certificates(self):
-        test_name = 'expired_server_certificates'
+        test_name = "expired_server_certificates"
         result = []
         try:
             server_certificates = self.aws_iam_client.list_server_certificates()
@@ -739,6 +741,53 @@ class Tester(interfaces.TesterInterface):
             return True
         except:
             return False
+
+    def detect_validity_period_of_server_certificates(self):
+        test_name = "valid_period_of_server_certificates"
+        result = []
+        try:
+            server_certificates = self.aws_iam_client.list_server_certificates()
+            for certificate in server_certificates['ServerCertificateMetadataList']:
+                days = self.days_between(certificate['Expiration'])
+                if days > self.server_certificate_days_to_expire:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": certificate['ServerCertificateId'] + "@@" + certificate['ServerCertificateName'],
+                        "item_type": "server_certificate_record",
+                        "server_certificate_record": self.serialize_date_field(certificate),
+                        "test_name": test_name,
+                        "timestamp": time.time(),
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "test_name": test_name,
+                        "item": certificate['ServerCertificateId'] + "@@" + certificate['ServerCertificateName'],
+                        "item_type": "server_certificate_record",
+                        "timestamp": time.time(),
+                        "test_result": "no_issue_found"
+                    })
+        except:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "server_certificate_record@@" + self.account_id,
+                "item_type": "server_certificate_record",
+                "server_certificate_record": {
+                    "error" : "Incorrect expired date type in certificate."
+                },
+                "test_name": test_name,
+                "timestamp": time.time(),
+                "test_result": "issue_found"
+            })
+        
+        return result
 
     def serialize_date_field(self, object):
         for key, value in object.items():
