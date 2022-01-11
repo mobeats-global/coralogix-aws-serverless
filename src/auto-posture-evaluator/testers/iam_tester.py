@@ -59,7 +59,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_support_role_manages_incidents() + \
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals() + \
-            self.detect_expired_server_certificates()
+            self.detect_expired_server_certificates() + \
+            self.detect_mfa_is_enabled_for_users()
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -488,7 +489,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_mfa_is_enabled_for_root(self):
-        test_name = "detect_mfa_is_enabled"
+        test_name = "mfa_is_enabled_for_root"
         result = []
         if not self.account_summary['SummaryMap']['AccountMFAEnabled']:
             result.append({
@@ -701,6 +702,43 @@ class Tester(interfaces.TesterInterface):
         date_to_compare = self.date_without_time(d1)
         return date_to_compare < d2
         
+    def detect_mfa_is_enabled_for_users(self):
+        test_name = "mfa_is_enabled_for_users"
+        result = []
+        for user in self.users['Users']:
+            mfa_devices = self.aws_iam_client.list_mfa_devices(UserName=user['UserName'])
+            if not mfa_devices['MFADevices'] or not self.is_password_enabled(user['UserName']):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": user['UserId'] + "@@" + user['UserName'],
+                    "item_type": "user_record",
+                    "user_record": self.serialize_date_field(user),
+                    "test_name": test_name,
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": user['UserId'] + "@@" + user['UserName'],
+                    "item_type": "user_record",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
+
+        return result
+
+    def is_password_enabled(self, user_name):
+        try:
+            self.aws_iam_client.get_login_profile(UserName=user_name)
+            return True
+        except:
+            return False
 
     def serialize_date_field(self, object):
         for key, value in object.items():
