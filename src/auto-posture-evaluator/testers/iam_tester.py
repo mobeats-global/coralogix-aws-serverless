@@ -59,8 +59,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_support_role_manages_incidents() + \
             self.detect_user_has_admin_permissions() + \
             self.detect_role_uses_trusted_principals() + \
+            self.detect_expired_server_certificates() + \
             self.detect_mfa_is_enabled_for_users()
-
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -649,6 +649,59 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
+    def detect_expired_server_certificates(self):
+        test_name = 'expired_server_certificates'
+        result = []
+        try:
+            server_certificates = self.aws_iam_client.list_server_certificates()
+            for certificate in server_certificates['ServerCertificateMetadataList']:
+                if self.is_date_expired(certificate['Expiration']):
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "item": certificate['ServerCertificateId'] + "@@" + certificate['ServerCertificateName'],
+                        "item_type": "server_certificate_record",
+                        "server_certificate_record": self.serialize_date_field(certificate),
+                        "test_name": test_name,
+                        "timestamp": time.time(),
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "test_name": test_name,
+                        "item": certificate['ServerCertificateId'] + "@@" + certificate['ServerCertificateName'],
+                        "item_type": "server_certificate_record",
+                        "timestamp": time.time(),
+                        "test_result": "no_issue_found"
+                    })
+        except:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "item": "server_certificate_record@@" + self.account_id,
+                "item_type": "server_certificate_record",
+                "server_certificate_record": {
+                    "error" : "Incorrect expired date type in certificate."
+                },
+                "test_name": test_name,
+                "timestamp": time.time(),
+                "test_result": "issue_found"
+            })
+        
+        return result
+
+    def is_date_expired(self, d1):
+        d2 = date.today()
+        if isinstance(d1, str):
+            d1 = self.str_to_datetime(d1)
+        date_to_compare = self.date_without_time(d1)
+        return date_to_compare < d2
+        
     def detect_mfa_is_enabled_for_users(self):
         test_name = "mfa_is_enabled_for_users"
         result = []
