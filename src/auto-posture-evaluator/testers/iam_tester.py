@@ -62,7 +62,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_role_uses_trusted_principals() + \
             self.detect_expired_server_certificates() + \
             self.detect_mfa_is_enabled_for_users() + \
-            self.detect_validity_period_of_server_certificates()
+            self.detect_validity_period_of_server_certificates() + \
+            self.detect_hardware_mfa_is_enabled_for_root()
 
     def detect_old_access_key(self):
         test_name = "old_access_keys"
@@ -788,6 +789,39 @@ class Tester(interfaces.TesterInterface):
             })
         
         return result
+
+    def detect_hardware_mfa_is_enabled_for_root(self):
+        test_name = "hardware_mfa_is_enabled_for_root"
+        result = []
+        virtual_mfa_devices = self.aws_iam_client.list_virtual_mfa_devices(AssignmentStatus='Assigned')
+        for device in virtual_mfa_devices['VirtualMFADevices']:
+            if device['User']['UserId'] == self.account_id:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "item": device['User']['UserId'] + "@@root",
+                    "item_type": "root_account_record",
+                    "root_account_record": self.serialize_date_field(device['User']),
+                    "test_name": test_name,
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
+                })
+            
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "test_name": test_name,
+                "item": "root_account_record@@" + self.account_id,
+                "item_type": "root_account_record",
+                "timestamp": time.time(),
+                "test_result": "no_issue_found"
+            })
+        
+        return result
+
 
     def serialize_date_field(self, object):
         for key, value in object.items():
